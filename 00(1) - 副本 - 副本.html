@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>单词应用</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind配置 -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            skinA: {
+              primary: '#0071e3',
+              dark: {
+                primary: '#2997ff',
+                bg: '#1c1c1e',
+                card: '#2c2c2e',
+                btn: '#3a3a3c',
+                activeBtn: '#283A4B',
+                overlay: 'rgba(0, 0, 0, 0.6)'
+              }
+            },
+            skinB: {
+              primary: '#0071e3',
+              light: {
+                navbar: '#F7F7F9',
+                card: '#F5F5F7',
+                btn: '#EAEAEA',
+                bg: '#FFFFFF',
+                activeBtn: '#606C58'
+              },
+              dark: {
+                primary: '#2997ff',
+                bg: '#1c1c1e',
+                card: '#2c2c2e',
+                btn: '#3a3a3c',
+                activeBtn: '#283A4B',
+                overlay: 'rgba(0, 0, 0, 0.6)'
+              }
+            },
+            silver: '#e0e0e0',
+            dark: {
+              silver: '#424242'
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+            apple: ['-apple-system', 'BlinkMacSystemFont', 'San Francisco', 'Helvetica Neue', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .backdrop-blur-sm {
+        backdrop-filter: blur(8px);
+      }
+      .shadow-soft {
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      }
+      .text-glow {
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+      }
+      .dark .text-glow {
+        text-shadow: 0 0 8px rgba(255, 255, 255, 0.15);
+      }
+      .flip-container {
+        perspective: 1000px;
+        width: 100%;
+        min-height: 500px;
+      }
+      .flipper {
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      .front, .back {
+        backface-visibility: hidden;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        min-height: 500px;
+      }
+      .back {
+        transform: rotateY(180deg);
+      }
+      .flipped .flipper {
+        transform: rotateY(180deg);
+      }
+      
+      /* 列表之间的翻转样式 */
+      .list-flip-container {
+        perspective: 1000px;
+        width: 100%;
+        min-height: 500px;
+      }
+      .list-flipper {
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      .list-front, .list-back {
+        backface-visibility: hidden;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        min-height: 500px;
+      }
+      .list-back {
+        transform: rotateY(180deg);
+      }
+      .list-flipped .list-flipper {
+        transform: rotateY(180deg);
+      }
+      
+      .control-btn {
+        min-width: 4rem;
+      }
+      .word-item {
+        @apply transition-all duration-200 cursor-pointer rounded-xl p-4 flex items-center justify-between font-apple focus:outline-none relative pl-6;
+        box-shadow: 
+          3px 3px 6px rgba(0, 0, 0, 0.08),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.7);
+      }
+      .dark .word-item {
+        box-shadow: 
+          3px 3px 6px rgba(0, 0, 0, 0.3),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.05);
+      }
+      .word-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 
+          4px 4px 8px rgba(0, 0, 0, 0.12),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.7);
+      }
+      .dark .word-item:hover {
+        box-shadow: 
+          4px 4px 8px rgba(0, 0, 0, 0.4),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.05);
+      }
+      .word-item.active {
+        box-shadow: 
+          3px 3px 6px rgba(0, 0, 0, 0.1),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.5);
+      }
+      .dark .word-item.active {
+        box-shadow: 
+          3px 3px 6px rgba(0, 0, 0, 0.35),
+          inset 1px 1px 2px rgba(255, 255, 255, 0.08);
+      }
+      .btn-active {
+        @apply text-white !important;
+      }
+      .skinB-active {
+        box-shadow: 
+          inset 0 1px 3px rgba(0, 0, 0, 0.4),
+          0 4px 8px rgba(0, 0, 0, 0.3),
+          0 1px 3px rgba(0, 0, 0, 0.2);
+        transform: translateY(-1px);
+        transition: all 0.2s ease;
+      }
+      .skinA-dark-active {
+        box-shadow: 
+          inset 0 1px 3px rgba(0, 0, 0, 0.3),
+          0 1px 2px rgba(255, 255, 255, 0.1);
+        transition: all 0.2s ease;
+      }
+      .frosted {
+        backdrop-filter: blur(12px) !important;
+        opacity: 0.7 !important;
+        transition: all 0s !important;
+      }
+      .slider-container {
+        position: relative;
+        width: 44px;
+        height: 20px;
+        border-radius: 10px;
+        transition: background-color 0.3s ease;
+      }
+      .slider {
+        position: absolute;
+        top: 1px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        transition: transform 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        background-color: white !important;
+      }
+      .slider-left {
+        left: 1px;
+        transform: translateX(0);
+      }
+      .slider-right {
+        transform: translateX(24px);
+      }
+      .custom-scrollbar {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(156, 163, 175, 0.5);
+        border-radius: 4px;
+      }
+      .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: rgba(107, 114, 128, 0.5);
+      }
+      /* 动画期间隐藏滚动条 */
+      .hiding-scrollbar::-webkit-scrollbar-thumb {
+        background-color: transparent !important;
+      }
+      #wordDisplay {
+        @apply text-4xl font-bold text-center my-3 mb-20 font-apple text-glow;
+      }
+      .skinB-light-btn {
+        box-shadow: 
+          3px 3px 6px rgba(0, 0, 0, 0.08),
+          inset 1px 1px 3px rgba(255, 255, 255, 0.9),
+          inset -1px -1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s ease;
+      }
+      .skinB-light-btn:hover {
+        box-shadow: 
+          4px 4px 8px rgba(0, 0, 0, 0.12),
+          inset 1px 1px 3px rgba(255, 255, 255, 0.9),
+          inset -1px -1px 3px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
+      }
+      .dark .skinB-dark-btn {
+        box-shadow: 
+          3px 3px 8px rgba(0, 0, 0, 0.3),
+          inset 1px 1px 3px rgba(255, 255, 255, 0.05),
+          inset -1px -1px 3px rgba(0, 0, 0, 0.4);
+        transition: all 0.2s ease;
+      }
+      .dark .skinB-dark-btn:hover {
+        box-shadow: 
+          4px 4px 10px rgba(0, 0, 0, 0.4),
+          inset 1px 1px 3px rgba(255, 255, 255, 0.07),
+          inset -1px -1px 3px rgba(0, 0, 0, 0.5);
+        transform: translateY(-1px);
+      }
+      .word-item.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        border-radius: 0 4px 4px 0;
+      }
+      .skinA:not(.dark) .word-item.active::before {
+        background-color: #0071e3;
+      }
+      .skinA:not(.dark) .word-item .fa-star {
+        color: #0071e3 !important;
+      }
+      .skinA.dark .word-item.active::before {
+        background-color: #283A4B;
+      }
+      .skinA.dark .word-item .fa-star {
+        color: #283A4B !important;
+      }
+      .skinB:not(.dark) .word-item.active::before {
+        background-color: #606C58;
+      }
+      .skinB:not(.dark) .word-item .fa-star {
+        color: #606C58 !important;
+      }
+      .skinB.dark .word-item.active::before {
+        background-color: #283A4B;
+      }
+      .skinB.dark .word-item .fa-star {
+        color: #283A4B !important;
+      }
+      
+      /* 优化的移除动画 - 更柔和丝滑 */
+      .word-item-remove {
+        animation: removeItem 0.5s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+      }
+      
+      @keyframes removeItem {
+        0% {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+          height: auto;
+          margin: 1rem 0;
+          padding: 1rem;
+          box-shadow: inherit;
+        }
+        50% {
+          opacity: 0.5;
+          transform: translateX(10px) scale(0.98);
+          box-shadow: none;
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(20px) scale(0.9);
+          height: 0;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+          box-shadow: none;
+        }
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-white dark:bg-skinA-dark-bg transition-colors duration-300 font-sans text-gray-900 dark:text-white skinA">
+  <header id="navbar" class="fixed top-0 left-0 right-0 z-40 bg-white/80 dark:bg-skinA-dark-bg/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 transition-all duration-300">
+    <div class="container mx-auto px-4 py-2 flex items-center justify-between">
+      <div class="flex items-center">
+        <span class="text-lg font-semibold tracking-tight">Words</span>
+      </div>
+      <button id="menuBtn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-skinA-dark-btn transition-colors duration-200 z-50">
+        <i class="fa fa-bars text-xl"></i>
+      </button>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 pt-14 pb-10">
+    <div id="expandableCard" class="rounded-3xl p-6 mt-6 mb-8 transition-all duration-500 min-h-[85vh] overflow-hidden card-3d" 
+         style="--focus-color: #0071e3; --focus-color-dark: #2997ff;">
+      <div class="flex justify-end items-start mb-6">
+        <button id="expandBtn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-skinA-dark-btn transition-colors duration-200">
+          <i class="fa fa-expand text-lg"></i>
+        </button>
+      </div>
+      
+      <div class="flip-container">
+        <div class="flipper">
+          <div class="front">
+            <div class="flex flex-col items-center justify-start px-6 h-full">
+              <div id="wordDisplay" class="text-4xl font-bold text-center my-3 mb-20 font-apple text-glow">
+                the
+              </div>
+              
+              <div id="frontControls" class="flex flex-col items-center gap-4 w-full max-w-md flex-grow justify-center">
+                <button id="prevBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white w-full py-2.5 rounded-full text-base font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow control-btn">
+                  <i class="fa fa-step-backward mr-1"></i> Previous
+                </button>
+                
+                <button id="playBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white w-full py-2.5 rounded-full text-base font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow control-btn">
+                  <i class="fa fa-play mr-1"></i> <span>Play</span>
+                </button>
+                
+                <button id="nextBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white w-full py-2.5 rounded-full text-base font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow control-btn">
+                  <i class="fa fa-step-forward mr-1"></i> Next
+                </button>
+                
+                <button id="collectBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white w-full py-2.5 rounded-full text-base font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow control-btn">
+                  <i class="fa fa-star-o mr-1"></i> Collect
+                </button>
+                
+                <button id="autoPlayBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white w-full py-2.5 rounded-full text-base font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow control-btn">
+                  <i class="fa fa-repeat mr-1"></i> Auto Play
+                </button>
+                
+                <button id="slowBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white w-full py-2.5 rounded-full text-base font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow control-btn">
+                  <i class="fa fa-clock-o mr-1"></i> Slow
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div class="back">
+            <!-- 列表之间的翻转容器 -->
+            <div class="list-flip-container" id="listFlipContainer">
+              <div class="list-flipper" id="listFlipper">
+                <!-- ALL LIST -->
+                <div class="list-front">
+                  <div class="flex flex-col h-full p-4 pb-8">
+                    <h3 class="text-4xl font-bold text-center my-3 mb-12 font-apple text-glow">ALL LIST</h3>
+                    
+                    <div class="w-full flex-grow overflow-y-auto px-2 mb-6 custom-scrollbar rounded-2xl p-4" style="max-height: calc(85vh - 320px);">
+                      <ul class="space-y-4" id="allWordList">
+                      </ul>
+                    </div>
+                    
+                    <div class="flex justify-center mt-auto mb-8 space-x-4">
+                      <button id="switchToCollectedBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white px-6 py-2.5 rounded-full text-lg font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow z-10">
+                        <i class="fa fa-star mr-2"></i>Collected
+                      </button>
+                      <button id="flipBackBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white px-6 py-2.5 rounded-full text-lg font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow z-10">
+                        <i class="fa fa-arrow-left mr-2"></i>返回
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- COLLECTED LIST -->
+                <div class="list-back">
+                  <div class="flex flex-col h-full p-4 pb-8">
+                    <h3 class="text-4xl font-bold text-center my-3 mb-12 font-apple text-glow">COLLECTED LIST</h3>
+                    
+                    <div class="w-full flex-grow overflow-y-auto px-2 mb-6 custom-scrollbar rounded-2xl p-4" style="max-height: calc(85vh - 320px);" id="collectedScrollContainer">
+                      <ul class="space-y-4" id="collectedWordList">
+                      </ul>
+                    </div>
+                    
+                    <div class="flex justify-center mt-auto mb-8 space-x-4">
+                      <button id="switchToAllBtn" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white px-6 py-2.5 rounded-full text-lg font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow z-10">
+                        <i class="fa fa-list mr-2"></i>All
+                      </button>
+                      <button id="flipBackBtn2" class="bg-white dark:bg-skinB-dark-btn text-gray-900 dark:text-white px-6 py-2.5 rounded-full text-lg font-medium hover:bg-gray-50 dark:hover:bg-skinB-dark-btn transition-all duration-300 font-apple shadow-sm hover:shadow z-10">
+                        <i class="fa fa-arrow-left mr-2"></i>返回
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="menuContainer">
+    <div id="menuOverlay" class="fixed inset-0 z-40 bg-black/30 dark:bg-skinB-dark-overlay backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-0"></div>
+    
+    <div id="menuPopup" class="absolute z-50 opacity-0 pointer-events-none transition-all duration-300">
+      <div class="bg-white dark:bg-skinB-dark-card rounded-2xl shadow-xl w-48 transform scale-95 transition-all duration-300" id="popupContent">
+        <div class="py-2">
+          <ul class="space-y-1">
+            <li>
+              <button id="themeToggle" class="flex items-center w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-skinB-dark-btn transition-colors text-left">
+                <div class="slider-container bg-gray-200 flex-shrink-0" id="themeSliderContainer">
+                  <div class="slider slider-left" id="themeSlider"></div>
+                </div>
+                <span id="themeText" class="ml-3">Switch Dark</span>
+              </button>
+            </li>
+            
+            <li>
+              <button id="skinToggle" class="flex items-center w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-skinB-dark-btn transition-colors text-left">
+                <div class="slider-container bg-gray-200 flex-shrink-0" id="skinSliderContainer">
+                  <div class="slider slider-left" id="skinSlider"></div>
+                </div>
+                <span id="skinText" class="ml-3">Switch B skin</span>
+              </button>
+            </li>
+
+            <li class="border-t border-gray-200 dark:border-gray-700 my-1"></li>
+            
+            <li>
+              <button id="popupAllListBtn" class="flex items-center w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-skinB-dark-btn transition-colors text-left">
+                <i class="fa fa-list w-6 popup-icon"></i>
+                <span class="ml-3">All List</span>
+              </button>
+            </li>
+            
+            <li>
+              <button id="popupCollectedListBtn" class="flex items-center w-full p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-skinB-dark-btn transition-colors text-left">
+                <i class="fa fa-star w-6 popup-icon"></i>
+                <span class="ml-3">Collected List</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const words = ["the", "book", "school", "apple", "banana", "computer", "friend", "family", "student", "teacher",
+                     "happy", "sad", "quick", "slow", "big", "small", "tall", "short", "good", "bad", "new", "old",
+                     "high", "low", "fast", "slow", "early", "late", "strong", "weak", "young", "old", "hot", "cold"];
+      
+      // 列表状态管理
+      let currentListType = 'all'; // 'all' 或 'collected'
+      let listIndices = {
+        all: 0,
+        collected: 0
+      };
+      let listStates = {
+        all: {
+          isAutoPlaying: false,
+          isPlaying: false
+        },
+        collected: {
+          isAutoPlaying: false,
+          isPlaying: false
+        }
+      };
+      
+      let isFlipped = false;
+      let menuOpen = false;
+      let isExpanded = false;
+      
+      const audioElement = new Audio();
+      
+      let autoPlayTimer = null;
+      let scrollCheckInterval = null;
+      let collectedWords = JSON.parse(localStorage.getItem('collectedWords')) || [];
+      let isSlow = false;
+      let isPlayTriggeredByControl = false;
+      let currentSkin = localStorage.getItem('currentSkin') || 'A';
+      
+      document.body.classList.toggle('skinA', currentSkin === 'A');
+      document.body.classList.toggle('skinB', currentSkin === 'B');
+      
+      let isAutoScrollPaused = false;
+      let userActivityTimer = null;
+      const AUTO_SCROLL_DELAY = 5000;
+      const SCROLL_THRESHOLD = 20;
+      const SCROLL_CHECK_FREQ = 150;
+      
+      // DOM元素引用
+      const navbar = document.getElementById('navbar');
+      const menuBtn = document.getElementById('menuBtn');
+      const menuPopup = document.getElementById('menuPopup');
+      const popupContent = document.getElementById('popupContent');
+      const menuOverlay = document.getElementById('menuOverlay');
+      const expandBtn = document.getElementById('expandBtn');
+      const expandableCard = document.getElementById('expandableCard');
+      const themeToggle = document.getElementById('themeToggle');
+      const themeText = document.getElementById('themeText');
+      const wordDisplay = document.getElementById('wordDisplay');
+      const popupAllListBtn = document.getElementById('popupAllListBtn');
+      const popupCollectedListBtn = document.getElementById('popupCollectedListBtn');
+      const flipBackBtn = document.getElementById('flipBackBtn');
+      const flipBackBtn2 = document.getElementById('flipBackBtn2');
+      const flipContainer = document.querySelector('.flip-container');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const allWordList = document.getElementById('allWordList');
+      const collectedWordList = document.getElementById('collectedWordList');
+      const collectedScrollContainer = document.getElementById('collectedScrollContainer');
+      const playBtn = document.getElementById('playBtn');
+      const playBtnText = playBtn.querySelector('span');
+      const playBtnIcon = playBtn.querySelector('i');
+      const autoPlayBtn = document.getElementById('autoPlayBtn');
+      const collectBtn = document.getElementById('collectBtn');
+      const slowBtn = document.getElementById('slowBtn');
+      const themeSliderContainer = document.getElementById('themeSliderContainer');
+      const themeSlider = document.getElementById('themeSlider');
+      const skinToggle = document.getElementById('skinToggle');
+      const skinSliderContainer = document.getElementById('skinSliderContainer');
+      const skinSlider = document.getElementById('skinSlider');
+      const skinText = document.getElementById('skinText');
+      const popupIcons = document.querySelectorAll('.popup-icon');
+      const frontControls = document.getElementById('frontControls');
+      const listFlipContainer = document.getElementById('listFlipContainer');
+      const switchToCollectedBtn = document.getElementById('switchToCollectedBtn');
+      const switchToAllBtn = document.getElementById('switchToAllBtn');
+
+      const allControlButtons = [
+        prevBtn, nextBtn, playBtn, autoPlayBtn, collectBtn, slowBtn, flipBackBtn, flipBackBtn2,
+        switchToCollectedBtn, switchToAllBtn
+      ];
+      
+      // 获取当前列表的单词
+      function getCurrentListWords() {
+        return currentListType === 'all' ? words : collectedWords;
+      }
+      
+      // 获取当前列表的索引
+      function getCurrentIndex() {
+        return listIndices[currentListType];
+      }
+      
+      // 设置当前列表的索引
+      function setCurrentIndex(index) {
+        const currentList = getCurrentListWords();
+        // 确保索引在有效范围内
+        listIndices[currentListType] = (index + currentList.length) % currentList.length;
+      }
+      
+      // 获取当前列表的状态
+      function getCurrentState() {
+        return listStates[currentListType];
+      }
+      
+      // 只调整扩大后的正面朗读区的按钮间距
+      function adjustButtonSpacing() {
+        const isExpanded = expandableCard.classList.contains('fixed');
+        const isFront = !flipContainer.classList.contains('flipped');
+        
+        // 非扩大状态或背面视图使用默认间距
+        if (!isExpanded || !isFront) {
+          frontControls.style.gap = '1rem';
+          return;
+        }
+        
+        // 只在扩大状态且正面视图时调整间距
+        // 获取正面区域和按钮组的位置信息
+        const frontElement = document.querySelector('.front');
+        const frontRect = frontElement.getBoundingClientRect();
+        const controlsRect = frontControls.getBoundingClientRect();
+        
+        // 计算按钮组底部到朗读区底部的距离
+        const distanceToBottom = frontRect.bottom - controlsRect.bottom;
+        
+        // 获取单个按钮的高度作为参考
+        const firstButton = frontControls.querySelector('button');
+        if (!firstButton) return;
+        
+        const buttonHeight = firstButton.offsetHeight;
+        const buttons = frontControls.querySelectorAll('button');
+        const buttonCount = buttons.length;
+        const gapCount = buttonCount - 1;
+        
+        // 如果底部空白大于一个按钮高度，则分配额外空间
+        if (distanceToBottom > buttonHeight) {
+          // 计算可用于分配的额外空间（减去保留的一个按钮高度的空白）
+          const extraSpace = distanceToBottom - buttonHeight;
+          
+          // 计算每个间距应增加的像素
+          const additionalGap = gapCount > 0 ? Math.floor(extraSpace / gapCount) : 0;
+          
+          // 基础间距1rem(16px)加上额外分配的空间，但不超过30px
+          const finalGap = Math.min(30, 16 + additionalGap);
+          
+          frontControls.style.gap = `${finalGap}px`;
+        } else {
+          // 底部空白不足时使用默认间距
+          frontControls.style.gap = '1rem';
+        }
+      }
+      
+      // 初始化所有列表
+      function initAllLists() {
+        initWordList(allWordList, words, 'all');
+        initWordList(collectedWordList, collectedWords, 'collected');
+      }
+      
+      // 初始化指定列表
+      function initWordList(listElement, wordArray, listType) {
+        listElement.innerHTML = '';
+        const skinPrefix = currentSkin === 'A' ? 'skinA' : 'skinB';
+        const isDark = document.documentElement.classList.contains('dark');
+        
+        let displayBgClass;
+        if (currentSkin === 'B' && !isDark) {
+          displayBgClass = 'bg-skinB-light-bg/90';
+        } else {
+          displayBgClass = isDark ? `dark:bg-${skinPrefix}-dark-bg` : 'bg-white/90';
+        }
+        
+        wordArray.forEach((word, index) => {
+          const li = document.createElement('li');
+          li.className = `${displayBgClass} word-item ${
+            index === listIndices[listType] && currentListType === listType
+              ? 'active' : ''
+          }`;
+          li.tabIndex = 0;
+          
+          const starIcon = collectedWords.includes(word) ? 
+            `<i class="fa fa-star"></i>` : 
+            '<i class="fa fa-star-o"></i>';
+          
+          // 将单词和收藏图标分开，为收藏图标添加独立的点击事件
+          li.innerHTML = `
+            <span class="text-base font-medium word-name">${word}</span>
+            <span class="ml-2 star-icon">${starIcon}</span>
+          `;
+          
+          // 单词名称点击事件 - 切换到该单词
+          const wordName = li.querySelector('.word-name');
+          wordName.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetControlButtonState();
+            const originalListType = currentListType;
+            currentListType = listType;
+            
+            const currentState = getCurrentState();
+            const wasPlaying = currentState.isPlaying;
+            
+            if (wasPlaying) {
+              stopAudio();
+              if (autoPlayTimer) clearInterval(autoPlayTimer);
+            }
+            
+            setCurrentIndex(index);
+            showWord(getCurrentIndex());
+            
+            // 更新两个列表的高亮状态
+            updateAllWordListActive();
+            
+            if (currentState.isAutoPlaying && wasPlaying) {
+              isPlayTriggeredByControl = true;
+              speakWord(getCurrentListWords()[getCurrentIndex()], true);
+              setupAutoPlayTimer();
+            } else if (!currentState.isAutoPlaying && wasPlaying) {
+              isPlayTriggeredByControl = true;
+              speakWord(getCurrentListWords()[getCurrentIndex()], false);
+            }
+            
+            // 如果点击的是另一个列表的单词，切换到该列表
+            if (originalListType !== currentListType) {
+              toggleListFlip();
+            }
+          });
+          
+          // 收藏图标点击事件 - 切换收藏状态
+          const starIconEl = li.querySelector('.star-icon');
+          starIconEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            pauseAutoScroll();
+            
+            const index = collectedWords.indexOf(word);
+            const isCurrentlyCollected = index !== -1;
+            
+            // 切换收藏状态
+            if (isCurrentlyCollected) {
+              // 取消收藏
+              collectedWords.splice(index, 1);
+              
+              // 如果是在收藏列表中取消收藏，添加移除动画
+              if (listType === 'collected') {
+                // 隐藏滚动条
+                collectedScrollContainer.classList.add('hiding-scrollbar');
+                
+                li.classList.add('word-item-remove');
+                li.addEventListener('animationend', () => {
+                  // 动画结束后移除元素
+                  li.remove();
+                  
+                  // 恢复滚动条
+                  collectedScrollContainer.classList.remove('hiding-scrollbar');
+                  
+                  // 更新列表索引
+                  if (index === listIndices.collected && collectedWords.length > 0) {
+                    // 如果删除的是当前索引的单词，调整索引
+                    listIndices.collected = Math.min(index, collectedWords.length - 1);
+                    showWord(listIndices.collected);
+                  } else if (collectedWords.length === 0) {
+                    // 如果收藏列表为空，显示第一个单词
+                    listIndices.collected = 0;
+                    showWord(0);
+                  }
+                  
+                  // 刷新列表
+                  initAllLists();
+                });
+              } else {
+                // 普通列表中只需刷新列表
+                initAllLists();
+              }
+            } else {
+              // 添加收藏
+              collectedWords.push(word);
+              initAllLists();
+            }
+            
+            // 保存收藏状态
+            localStorage.setItem('collectedWords', JSON.stringify(collectedWords));
+            
+            // 更新当前单词的收藏按钮状态
+            updateCollectBtn();
+            updateAllWordListActive();
+          });
+          
+          li.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              wordName.click();
+            }
+          });
+          
+          listElement.appendChild(li);
+        });
+      }
+    
+    function updateAllWordListActive() {
+      // 更新ALL LIST的高亮状态
+      document.querySelectorAll('#allWordList .word-item').forEach((item, index) => {
+        item.classList.toggle('active', index === listIndices.all && currentListType === 'all');
+      });
+      
+      // 更新COLLECTED LIST的高亮状态
+      document.querySelectorAll('#collectedWordList .word-item').forEach((item, index) => {
+        item.classList.toggle('active', index === listIndices.collected && currentListType === 'collected');
+      });
+    }
+    
+    function updateWordListHeight() {
+      const listContainers = document.querySelectorAll('.list-front .custom-scrollbar, .list-back .custom-scrollbar');
+      listContainers.forEach(container => {
+        container.style.maxHeight = isExpanded ? 'calc(100vh - 320px)' : 'calc(85vh - 320px)';
+      });
+    }
+    
+    function updatePopupIconsColor() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const iconColor = isDark ? 'text-white' : 'text-gray-900';
+      
+      popupIcons.forEach(icon => {
+        icon.className = icon.className
+          .replace(/text-skinA-primary|text-skinB-primary|text-skinA-dark-primary|text-skinB-dark-primary/g, '')
+          .replace(/text-white|text-gray-900|text-gray-400|text-gray-500/g, '');
+        icon.classList.add(iconColor);
+        icon.classList.add('w-6');
+      });
+    }
+    
+    function updateSkinSlider() {
+      if (currentSkin === 'B') {
+        skinSlider.classList.remove('slider-left');
+        skinSlider.classList.add('slider-right');
+        skinText.textContent = 'Switch A skin';
+        document.body.classList.remove('skinA');
+        document.body.classList.add('skinB');
+      } else {
+        skinSlider.classList.remove('slider-right');
+        skinSlider.classList.add('slider-left');
+        skinText.textContent = 'Switch B skin';
+        document.body.classList.remove('skinB');
+        document.body.classList.add('skinA');
+      }
+    }
+    
+    function initSkin() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const skinPrefix = currentSkin === 'A' ? 'skinA' : 'skinB';
+      
+      document.body.className = document.body.className
+        .replace(/bg-white|bg-skinB-light-bg/g, '')
+        .replace(/dark:bg-skinA-dark-bg|dark:bg-skinB-dark-bg/g, '');
+      
+      navbar.className = navbar.className
+        .replace(/bg-white\/80|bg-skinB-light-navbar\/80/g, '')
+        .replace(/dark:bg-skinA-dark-bg\/80|dark:bg-skinB-dark-bg\/80/g, '');
+      
+      expandableCard.className = expandableCard.className
+        .replace(/bg-white|bg-skinB-light-card/g, '')
+        .replace(/dark:bg-skinA-dark-card|dark:bg-skinB-dark-card/g, '');
+      
+      if (currentSkin === 'B' && !isDark) {
+        expandableCard.classList.add('bg-skinB-light-bg/90');
+        wordDisplay.classList.add('bg-skinB-light-bg/90');
+      } else {
+        const bgClass = isDark ? `dark:bg-${skinPrefix}-dark-bg` : 'bg-white/90';
+        expandableCard.classList.add(bgClass);
+        wordDisplay.classList.add(bgClass);
+      }
+      
+      allControlButtons.forEach(btn => {
+        btn.className = btn.className
+          .replace(/bg-white|bg-skinB-light-btn/g, '')
+          .replace(/hover:bg-gray-50|hover:bg-skinB-light-btn\/80/g, '')
+          .replace(/dark:bg-skinA-dark-btn|dark:bg-skinB-dark-btn/g, '');
+      
+        btn.classList.remove('skinB-active', 'skinA-dark-active');
+      });
+      
+      if (currentSkin === 'B' && !isDark) {
+        document.body.classList.add('bg-skinB-light-bg');
+        navbar.classList.add('bg-skinB-light-navbar/80');
+        
+        allControlButtons.forEach(btn => {
+          btn.classList.add('bg-skinB-light-btn');
+          btn.classList.add('hover:bg-skinB-light-btn/80');
+        });
+      } else {
+        document.body.classList.add(isDark ? `dark:bg-${skinPrefix}-dark-bg` : 'bg-white');
+        navbar.classList.add(isDark ? `dark:bg-${skinPrefix}-dark-bg/80` : 'bg-white/80');
+        
+        allControlButtons.forEach(btn => {
+          btn.classList.add(isDark ? `dark:bg-${skinPrefix}-dark-btn` : 'bg-white');
+          btn.classList.add('hover:bg-gray-50');
+        });
+      }
+      
+      menuOverlay.className = menuOverlay.className.replace(/dark:bg-skinA-dark-overlay|dark:bg-skinB-dark-overlay/g, `dark:bg-${skinPrefix}-dark-overlay`);
+      popupContent.className = popupContent.className.replace(/dark:bg-skinA-dark-card|dark:bg-skinB-dark-card/g, `dark:bg-${skinPrefix}-dark-card`);
+      
+      updatePopupIconsColor();
+      initAllLists();
+      updateSliderColors();
+    }
+    
+    function switchSkin(skin) {
+      currentSkin = skin;
+      localStorage.setItem('currentSkin', skin);
+      refreshAllButtonStates();
+      updateSkinSlider();
+      initSkin();
+      closeMenu();
+      adjustButtonSpacing();
+    }
+    
+    function setButtonActive(button, isActive) {
+      if (!button) return;
+      
+      const isDark = document.documentElement.classList.contains('dark');
+      const skinPrefix = currentSkin === 'A' ? 'skinA' : 'skinB';
+      
+      button.classList.remove('skinB-active', 'skinA-dark-active', 'btn-active');
+      button.classList.remove(`bg-skinA-primary`, `bg-skinA-dark-activeBtn`, `bg-skinB-light-activeBtn`, `bg-skinB-dark-activeBtn`);
+      button.classList.remove(`hover:bg-skinA-primary/90`, `hover:bg-skinA-dark-activeBtn/90`, `hover:bg-skinB-light-activeBtn/90`, `hover:bg-skinB-dark-activeBtn/90`);
+      
+      button.style.backgroundColor = '';
+      button.style.boxShadow = '';
+      button.style.transform = '';
+      
+      requestAnimationFrame(() => {
+        if (isActive) {
+          if (currentSkin === 'A') {
+            button.classList.add('btn-active');
+            const activeColor = isDark ? `bg-skinA-dark-activeBtn` : `bg-skinA-primary`;
+            button.classList.add(activeColor);
+            button.classList.add(`hover:${activeColor}/90`);
+            
+            if (isDark) {
+              button.classList.add('skinA-dark-active');
+              button.style.backgroundColor = '#283A4B';
+            }
+          } else {
+            button.classList.add('btn-active', 'skinB-active');
+            const activeColor = isDark ? `bg-skinB-dark-activeBtn` : `bg-skinB-light-activeBtn`;
+            button.classList.add(activeColor);
+            button.classList.add(`hover:${activeColor}/90`);
+            button.style.backgroundColor = isDark ? '#283A4B' : '#606C58';
+            button.style.transform = 'translateY(-1px)';
+          }
+          
+          button.classList.remove('hover:bg-gray-50', 'hover:bg-skinB-light-btn/80', 'dark:hover:bg-skinA-dark-btn', 'dark:hover:bg-skinB-dark-btn');
+        } else {
+          button.classList.remove('skinB-active', 'skinA-dark-active');
+          if (currentSkin === 'B' && !isDark) {
+            button.classList.add('hover:bg-skinB-light-btn/80');
+          } else {
+            button.classList.add('hover:bg-gray-50');
+          }
+          button.classList.add(`dark:hover:bg-${skinPrefix}-dark-btn`);
+        }
+      });
+    }
+    
+    function refreshAllButtonStates() {
+      requestAnimationFrame(() => {
+        allControlButtons.forEach(btn => {
+          btn.classList.remove('skinB-active', 'skinA-dark-active', 'btn-active');
+          btn.style.backgroundColor = '';
+          btn.style.boxShadow = '';
+          btn.style.transform = '';
+        });
+        
+        requestAnimationFrame(() => {
+          const currentState = getCurrentState();
+          setButtonActive(prevBtn, false);
+          setButtonActive(nextBtn, false);
+          setButtonActive(playBtn, currentState.isPlaying);
+          setButtonActive(autoPlayBtn, currentState.isAutoPlaying);
+          setButtonActive(collectBtn, collectedWords.includes(getCurrentListWords()[getCurrentIndex()]));
+          setButtonActive(slowBtn, isSlow);
+        });
+      });
+    }
+    
+    function updatePlayButtonState(isActive, shouldActivate) {
+      if (isActive) {
+        playBtnIcon.classList.remove('fa-play');
+        playBtnIcon.classList.add('fa-pause');
+        playBtnText.textContent = 'Pause';
+      } else {
+        playBtnIcon.classList.remove('fa-pause');
+        playBtnIcon.classList.add('fa-play');
+        playBtnText.textContent = 'Play';
+      }
+      setButtonActive(playBtn, isActive && shouldActivate);
+    }
+    
+    function positionPopup() {
+      const menuBtnRect = menuBtn.getBoundingClientRect();
+      menuPopup.style.top = `${menuBtnRect.bottom}px`;
+      menuPopup.style.right = `${window.innerWidth - menuBtnRect.left}px`;
+    }
+    
+    function isElementVisible(element, container) {
+      const rect = element.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      return rect.top >= containerRect.top && rect.bottom <= containerRect.bottom;
+    }
+    
+    function scrollToElement(element, container) {
+      const elementRect = element.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      const containerTop = container.scrollTop;
+      
+      const elementPosition = elementRect.top - containerRect.top + containerTop;
+      const containerMiddle = containerRect.height / 2;
+      const elementMiddle = elementRect.height / 2;
+      
+      container.scrollTo({
+        top: elementPosition - containerMiddle + elementMiddle,
+        behavior: 'smooth'
+      });
+    }
+    
+    // 强制滚动到当前活跃单词
+    function scrollToActiveWord() {
+      let activeWord, container;
+      
+      if (currentListType === 'all') {
+        activeWord = document.querySelector('#allWordList .word-item.active');
+        container = document.querySelector('#allWordList').parentElement;
+      } else {
+        activeWord = document.querySelector('#collectedWordList .word-item.active');
+        container = document.querySelector('#collectedWordList').parentElement;
+      }
+      
+      if (activeWord && container) {
+        scrollToElement(activeWord, container);
+      }
+    }
+    
+    function checkAutoScroll() {
+      const currentState = getCurrentState();
+      if (!currentState.isAutoPlaying || isAutoScrollPaused) return;
+      
+      let activeWord, container;
+      
+      if (currentListType === 'all') {
+        activeWord = document.querySelector('#allWordList .word-item.active');
+        container = document.querySelector('#allWordList').parentElement;
+      } else {
+        activeWord = document.querySelector('#collectedWordList .word-item.active');
+        container = document.querySelector('#collectedWordList').parentElement;
+      }
+      
+      if (!activeWord || !container) return;
+      
+      if (!isElementVisible(activeWord, container)) {
+        scrollToElement(activeWord, container);
+        return;
+      }
+      
+      const activeIndex = Array.from(activeWord.parentElement.children).indexOf(activeWord);
+      const totalWords = activeWord.parentElement.children.length;
+      let targetIndex = activeIndex + 3;
+      
+      if (targetIndex >= totalWords) {
+        const overflow = targetIndex - totalWords;
+        
+        if (activeIndex >= totalWords - 3) {
+          container.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+        
+        targetIndex = overflow;
+      }
+      
+      const targetWord = activeWord.parentElement.children[targetIndex];
+      const targetRect = targetWord.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      if (targetRect.bottom > containerRect.bottom - SCROLL_THRESHOLD) {
+        const scrollAmount = targetRect.bottom - containerRect.bottom + SCROLL_THRESHOLD;
+        container.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+      }
+    }
+    
+    function startScrollCheck() {
+      if (scrollCheckInterval) clearInterval(scrollCheckInterval);
+      scrollCheckInterval = setInterval(checkAutoScroll, SCROLL_CHECK_FREQ);
+    }
+    
+    function stopScrollCheck() {
+      if (scrollCheckInterval) {
+        clearInterval(scrollCheckInterval);
+        scrollCheckInterval = null;
+      }
+    }
+    
+    function stopAudio() {
+      audioElement.pause();
+      audioElement.currentTime = 0;
+      const currentState = getCurrentState();
+      currentState.isPlaying = false;
+      updatePlayButtonState(false, false);
+    }
+    
+    function speakWord(word, isAuto) {
+      stopAudio();
+      
+      const youdaoUrl = `http://dict.youdao.com/dictvoice?type=0&audio=${encodeURIComponent(word)}`;
+      audioElement.src = youdaoUrl;
+      
+      const currentState = getCurrentState();
+      currentState.isPlaying = true;
+      const shouldActivate = !isPlayTriggeredByControl || isAuto;
+      updatePlayButtonState(true, shouldActivate);
+      
+      updateAllWordListActive();
+      
+      audioElement.onended = function() {
+        currentState.isPlaying = false;
+        if (!currentState.isAutoPlaying) {
+          updatePlayButtonState(false, false);
+        }
+      };
+      
+      audioElement.play().catch(error => {
+        console.error('播放失败:', error);
+        currentState.isPlaying = false;
+        updatePlayButtonState(false, false);
+      });
+    }
+    
+    function showWord(index) {
+      const currentList = getCurrentListWords();
+      wordDisplay.textContent = currentList[index];
+      updateAllWordListActive();
+      updateCollectBtn();
+      
+      const currentState = getCurrentState();
+      if (currentState.isAutoPlaying) {
+        checkAutoScroll();
+      }
+    }
+    
+    // 切换列表类型的函数
+   function switchListType(newType) {
+  // 保存原列表的状态
+  const originalState = {
+    isAutoPlaying: listStates[currentListType].isAutoPlaying,
+    isPlaying: listStates[currentListType].isPlaying
+  };
+  
+  // 停止任何播放活动
+  stopAudio();
+  if (autoPlayTimer) clearInterval(autoPlayTimer);
+  stopScrollCheck();
+  
+  // 切换到新列表
+  currentListType = newType;
+  
+  // 关键修改：同步列表容器的翻转状态与当前列表类型
+  if (newType === 'collected') {
+    listFlipContainer.classList.add('list-flipped'); // 显示Collected List
+  } else {
+    listFlipContainer.classList.remove('list-flipped'); // 显示ALL LIST
+  }
+  
+  // 更新UI
+  initAllLists();
+  showWord(getCurrentIndex());
+  
+  // 确保新列表的高亮单词可见
+  setTimeout(() => {
+    scrollToActiveWord();
+  }, 100);
+  
+  // 重置按钮状态
+  refreshAllButtonStates();
+  
+  // 恢复原列表的播放状态
+  const newState = getCurrentState();
+  newState.isAutoPlaying = originalState.isAutoPlaying;
+  newState.isPlaying = originalState.isPlaying;
+  
+  // 如果需要自动播放，则启动自动播放
+  if (newState.isAutoPlaying) {
+    setButtonActive(autoPlayBtn, true);
+    setupAutoPlayTimer();
+  } 
+  // 如果只需要播放当前单词，则播放
+  else if (newState.isPlaying) {
+    updatePlayButtonState(true, true);
+    speakWord(getCurrentListWords()[getCurrentIndex()], false);
+  }
+}    
+    // 切换列表并翻转
+    function switchListAndToggleFlip(newType) {
+      // 关闭菜单
+      closeMenu();
+      
+      // 检查当前是否在反面列表页
+      const isOnBackPage = isFlipped;
+      
+      // 情况1: 已经在反面列表页且列表类型相同 - 不做任何操作
+      if (isOnBackPage && currentListType === newType) {
+        return;
+      }
+      
+      // 情况2: 已经在反面列表页但列表类型不同 - 切换列表并翻转
+      if (isOnBackPage && currentListType !== newType) {
+        toggleListFlip();
+        setTimeout(() => {
+          switchListType(newType);
+        }, 300); // 等待翻转动画完成
+        return;
+      }
+      
+      // 情况3: 在正面朗读页 - 切换列表并翻转到反面
+      if (!isOnBackPage) {
+        switchListType(newType);
+        setTimeout(() => {
+          toggleFlip();
+          adjustButtonSpacing();
+        }, 100);
+      }
+    }
+    
+    // 翻转列表视图
+    function toggleListFlip() {
+      pauseAutoScroll();
+      listFlipContainer.classList.toggle('list-flipped');
+      switchListType(currentListType === 'all' ? 'collected' : 'all');
+    }
+    
+    prevBtn.addEventListener('click', () => {
+      pauseAutoScroll();
+      
+      stopAudio();
+      if (autoPlayTimer) clearInterval(autoPlayTimer);
+      
+      setCurrentIndex(getCurrentIndex() - 1);
+      showWord(getCurrentIndex());
+      
+      const currentState = getCurrentState();
+      isPlayTriggeredByControl = true;
+      
+      setButtonActive(prevBtn, true);
+      setButtonActive(nextBtn, false);
+      setTimeout(() => setButtonActive(prevBtn, false), 150);
+      
+      speakWord(getCurrentListWords()[getCurrentIndex()], currentState.isAutoPlaying);
+      
+      if (currentState.isAutoPlaying) {
+        setupAutoPlayTimer();
+      }
+    });
+    
+    nextBtn.addEventListener('click', () => {
+      pauseAutoScroll();
+      
+      stopAudio();
+      if (autoPlayTimer) clearInterval(autoPlayTimer);
+      
+      setCurrentIndex(getCurrentIndex() + 1);
+      showWord(getCurrentIndex());
+      
+      const currentState = getCurrentState();
+      isPlayTriggeredByControl = true;
+      
+      setButtonActive(nextBtn, true);
+      setButtonActive(prevBtn, false);
+      setTimeout(() => setButtonActive(nextBtn, false), 150);
+      
+      speakWord(getCurrentListWords()[getCurrentIndex()], currentState.isAutoPlaying);
+      
+      if (currentState.isAutoPlaying) {
+        setupAutoPlayTimer();
+      }
+    });
+    
+    playBtn.addEventListener('click', () => {
+      pauseAutoScroll();
+      
+      const currentState = getCurrentState();
+      if (currentState.isPlaying) {
+        stopAudio();
+        if (autoPlayTimer) clearInterval(autoPlayTimer);
+      } else {
+        resetControlButtonState();
+        currentState.isPlaying = true;
+        updatePlayButtonState(true, true);
+        speakWord(getCurrentListWords()[getCurrentIndex()], currentState.isAutoPlaying);
+        
+        if (currentState.isAutoPlaying) {
+          setupAutoPlayTimer();
+        }
+      }
+    });
+    
+    function resetControlButtonState() {
+      setButtonActive(prevBtn, false);
+      setButtonActive(nextBtn, false);
+    }
+    
+    function setupAutoPlayTimer() {
+      if (autoPlayTimer) clearInterval(autoPlayTimer);
+      const intervalTime = isSlow ? 3000 : 2000;
+      
+      startScrollCheck();
+      
+      autoPlayTimer = setInterval(() => {
+        const currentList = getCurrentListWords();
+        if (currentList.length === 0) {
+          clearInterval(autoPlayTimer);
+          return;
+        }
+        
+        setCurrentIndex(getCurrentIndex() + 1);
+        showWord(getCurrentIndex());
+        isPlayTriggeredByControl = false;
+        speakWord(currentList[getCurrentIndex()], true);
+      }, intervalTime);
+    }
+    
+    autoPlayBtn.addEventListener('click', () => {
+      pauseAutoScroll();
+      
+      resetControlButtonState();
+      const currentState = getCurrentState();
+      if (currentState.isAutoPlaying) {
+        stopAudio();
+        if (autoPlayTimer) clearInterval(autoPlayTimer);
+        stopScrollCheck();
+        currentState.isAutoPlaying = false;
+        currentState.isPlaying = false;
+        setButtonActive(autoPlayBtn, false);
+        updatePlayButtonState(false, false);
+      } else {
+        resetControlButtonState();
+        currentState.isAutoPlaying = true;
+        setButtonActive(autoPlayBtn, true);
+        updatePlayButtonState(false, false);
+        
+        setupAutoPlayTimer();
+      }
+      adjustButtonSpacing();
+    });
+    
+    function updateCollectBtn() {
+      const currentWord = getCurrentListWords()[getCurrentIndex()];
+      const collectIcon = collectBtn.querySelector('i');
+      const isCollected = collectedWords.includes(currentWord);
+      
+      if (isCollected) {
+        collectIcon.classList.remove('fa-star-o');
+        collectIcon.classList.add('fa-star');
+      } else {
+        collectIcon.classList.remove('fa-star');
+        collectIcon.classList.add('fa-star-o');
+      }
+      
+      setButtonActive(collectBtn, isCollected);
+    }
+    
+    collectBtn.addEventListener('click', () => {
+      pauseAutoScroll();
+      
+      resetControlButtonState();
+      const currentWord = getCurrentListWords()[getCurrentIndex()];
+      const index = collectedWords.indexOf(currentWord);
+      
+      if (index === -1) {
+        collectedWords.push(currentWord);
+      } else {
+        collectedWords.splice(index, 1);
+      }
+      
+      localStorage.setItem('collectedWords', JSON.stringify(collectedWords));
+      updateCollectBtn();
+      initAllLists();
+      
+      // 如果当前在收藏列表且删除了当前单词，需要调整索引
+      if (currentListType === 'collected' && index !== -1) {
+        const currentList = getCurrentListWords();
+        if (getCurrentIndex() >= currentList.length && currentList.length > 0) {
+          setCurrentIndex(currentList.length - 1);
+          showWord(getCurrentIndex());
+          scrollToActiveWord();
+        } else if (currentList.length === 0) {
+          showWord(0);
+        }
+      }
+    });
+    
+    slowBtn.addEventListener('click', () => {
+      pauseAutoScroll();
+      
+      resetControlButtonState();
+      isSlow = !isSlow;
+      setButtonActive(slowBtn, isSlow);
+      
+      const currentState = getCurrentState();
+      if (currentState.isAutoPlaying && autoPlayTimer) {
+        clearInterval(autoPlayTimer);
+        setupAutoPlayTimer();
+      }
+    });
+    
+    window.addEventListener('resize', () => {
+      if (menuOpen) positionPopup();
+      if (isExpanded) updateWordListHeight();
+      adjustButtonSpacing();
+    });
+    
+    menuBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      pauseAutoScroll();
+      
+      if (menuOpen) {
+        closeMenu();
+      } else {
+        positionPopup();
+        openMenu();
+        updatePopupIconsColor();
+      }
+    });
+    
+    menuOverlay.addEventListener('click', () => menuOpen && closeMenu());
+    
+    popupContent.addEventListener('click', e => e.stopPropagation());
+    
+    function openMenu() {
+      menuPopup.classList.remove('opacity-0', 'pointer-events-none');
+      popupContent.classList.remove('scale-95');
+      popupContent.classList.add('scale-100');
+      menuOverlay.classList.remove('opacity-0', 'pointer-events-none');
+      navbar.classList.add('frosted');
+      menuOpen = true;
+    }
+    
+    function closeMenu() {
+      menuPopup.classList.add('opacity-0', 'pointer-events-none');
+      popupContent.classList.remove('scale-100');
+      popupContent.classList.add('scale-95');
+      menuOverlay.classList.add('opacity-0', 'pointer-events-none');
+      navbar.classList.remove('frosted');
+      menuOpen = false;
+    }
+    
+    expandBtn.addEventListener('click', () => {
+      pauseAutoScroll();
+      
+      const currentState = getCurrentState();
+      if (currentState.isPlaying) {
+        stopAudio();
+        if (autoPlayTimer) clearInterval(autoPlayTimer);
+        stopScrollCheck();
+        currentState.isPlaying = false;
+        updatePlayButtonState(false, false);
+      }
+      
+      if (isExpanded) {
+        expandableCard.classList.remove('fixed', 'inset-0', 'm-0', 'z-40', 'rounded-none', 'p-8');
+        expandableCard.classList.add('rounded-3xl', 'mt-6', 'mb-8', 'p-6');
+        expandBtn.innerHTML = '<i class="fa fa-expand text-lg"></i>';
+        document.body.classList.remove('overflow-hidden');
+        navbar.classList.remove('opacity-0', 'pointer-events-none');
+      } else {
+        expandableCard.classList.add('fixed', 'inset-0', 'm-0', 'z-40', 'rounded-none', 'p-8');
+        expandableCard.classList.remove('rounded-3xl', 'mt-6', 'mb-8', 'p-6');
+        expandBtn.innerHTML = '<i class="fa fa-compress text-lg"></i>';
+        document.body.classList.add('overflow-hidden');
+        navbar.classList.add('opacity-0', 'pointer-events-none');
+        closeMenu();
+      }
+      
+      isExpanded = !isExpanded;
+      updateWordListHeight();
+      adjustButtonSpacing();
+    });
+    
+    // 切换到收藏列表按钮
+    switchToCollectedBtn.addEventListener('click', toggleListFlip);
+    
+    // 切换到所有列表按钮
+    switchToAllBtn.addEventListener('click', toggleListFlip);
+    
+    flipBackBtn.addEventListener('click', function() {
+      closeMenu();
+      setTimeout(() => {
+        toggleFlip();
+        adjustButtonSpacing();
+      }, 100);
+    });
+    
+    flipBackBtn2.addEventListener('click', function() {
+      closeMenu();
+      setTimeout(() => {
+        toggleFlip();
+        adjustButtonSpacing();
+      }, 100);
+    });
+    
+    function updateTheme() {
+      const isDark = document.documentElement.classList.contains('dark');
+      themeText.textContent = isDark ? 'Switch Light' : 'Switch Dark';
+      themeSlider.classList.toggle('slider-left', !isDark);
+      themeSlider.classList.toggle('slider-right', isDark);
+      
+      updateSliderColors();
+      updatePopupIconsColor();
+      refreshAllButtonStates();
+      initSkin();
+      adjustButtonSpacing();
+    }
+    
+    skinToggle.addEventListener('click', () => {
+      switchSkin(currentSkin === 'A' ? 'B' : 'A');
+    });
+    
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    }
+    
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('shadow-md', window.scrollY > 10);
+    });
+    
+    themeToggle.addEventListener('click', () => {
+      pauseAutoScroll();
+      
+      document.documentElement.classList.toggle('dark');
+      localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+      updateTheme();
+      closeMenu();
+    });
+    
+    function toggleFlip() {
+      pauseAutoScroll();
+      flipContainer.classList.toggle('flipped');
+      isFlipped = !isFlipped;
+      if (isFlipped) {
+        // 确保翻到列表视图时，当前高亮单词可见
+        setTimeout(() => {
+          scrollToActiveWord();
+        }, 300);
+      }
+    }
+    
+    // 列表容器滚动事件
+    document.querySelectorAll('.list-front .custom-scrollbar, .list-back .custom-scrollbar').forEach(container => {
+      container.addEventListener('scroll', pauseAutoScroll);
+      container.addEventListener('mousedown', pauseAutoScroll);
+      container.addEventListener('mouseup', pauseAutoScroll);
+      container.addEventListener('touchstart', pauseAutoScroll);
+      container.addEventListener('touchend', pauseAutoScroll);
+      container.addEventListener('click', pauseAutoScroll);
+    });
+    
+    // 菜单项点击事件
+    popupAllListBtn.addEventListener('click', function() {
+      switchListAndToggleFlip('all');
+    });
+    
+    popupCollectedListBtn.addEventListener('click', function() {
+      switchListAndToggleFlip('collected');
+    });
+    
+    window.addEventListener('load', adjustButtonSpacing);
+    
+    function pauseAutoScroll() {
+      const currentState = getCurrentState();
+      if (!currentState.isAutoPlaying) return;
+      
+      isAutoScrollPaused = true;
+      
+      if (userActivityTimer) clearTimeout(userActivityTimer);
+      userActivityTimer = setTimeout(() => {
+        isAutoScrollPaused = false;
+        
+        let activeWord, container;
+        if (currentListType === 'all') {
+          activeWord = document.querySelector('#allWordList .word-item.active');
+          container = document.querySelector('#allWordList').parentElement;
+        } else {
+          activeWord = document.querySelector('#collectedWordList .word-item.active');
+          container = document.querySelector('#collectedWordList').parentElement;
+        }
+        
+        if (activeWord && container && !isElementVisible(activeWord, container)) {
+          scrollToElement(activeWord, container);
+          setTimeout(checkAutoScroll, 600);
+        } else {
+          checkAutoScroll();
+        }
+      }, AUTO_SCROLL_DELAY);
+    }
+    
+    function updateSliderColors() {
+      const isDark = document.documentElement.classList.contains('dark');
+      const skinPrefix = currentSkin === 'A' ? 'skinA' : 'skinB';
+      
+      let activeColor;
+      if (currentSkin === 'A') {
+        activeColor = isDark ? '#283A4B' : '#0071e3';
+      } else {
+        activeColor = isDark ? '#283A4B' : '#606C58';
+      }
+      
+      [themeSliderContainer, skinSliderContainer].forEach(container => {
+        container.style.backgroundColor = activeColor;
+      });
+      
+      expandableCard.style.setProperty('--focus-color', currentSkin === 'A' ? '#0071e3' : '#606C58');
+      expandableCard.style.setProperty('--focus-color-dark', '#283A4B');
+    }
+    
+    function init() {
+      updateSkinSlider();
+      initSkin();
+      showWord(getCurrentIndex());
+      updateTheme();
+      updatePlayButtonState(false, false);
+      setButtonActive(slowBtn, isSlow);
+      adjustButtonSpacing();
+    }
+    
+    init();
+  });
+  </script>
+</body>
+</html>
