@@ -1,0 +1,1143 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Words</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = { theme: { extend: { colors: { accent: '#007AFF' }, fontFamily: { inter: ['Inter', 'sans-serif'] } } }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            /* 保持原有样式不变 */
+            * {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+            
+            .action-btn {
+                padding: 0.65rem 1rem;
+                border-radius: 1.5rem;
+                font-weight: 500;
+                cursor: pointer;
+                font-size: 0.9rem;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.65rem;
+                width: 100%;
+                height: 40px;
+                transition: all 0.2s ease;
+                border: 1px solid;
+                border-top-color: #eaeaea;
+                border-left-color: #eaeaea;
+                border-bottom-color: #d0d0d0;
+                border-right-color: #d0d0d0;
+                box-shadow: 
+                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
+                    0 1px 0 rgba(255, 255, 255, 0.6);
+                background-color: #f9f9f9;
+                color: #333;
+            }
+            .action-btn i {
+                width: 18px;
+            }
+            .action-btn:hover {
+                background-color: #f0f0f0;
+                transform: translateY(-2px);
+                box-shadow: 
+                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
+                    0 3px 8px rgba(0,0,0,0.1);
+            }
+            .action-btn.active {
+                background-color: #e6f0ff;
+                color: #007AFF;
+                border-top-color: #b3d1ff;
+                border-left-color: #b3d1ff;
+                border-bottom-color: #80b8ff;
+                border-right-color: #80b8ff;
+                box-shadow: 
+                    inset 0 1px 2px rgba(255, 255, 255, 0.6),
+                    0 2px 4px rgba(0, 122, 255, 0.15);
+                font-weight: 600;
+            }
+            .action-btn.active i {
+                color: #007AFF;
+            }
+            .action-btn.special-active i {
+                color: #333;
+            }
+            
+            /* 其他样式保持不变 */
+            .card-container {
+                perspective: 1500px;
+                width: clamp(320px, 90vw, 700px);
+                height: clamp(500px, 80vh, 750px); 
+                margin: 0.5rem auto;
+                transition: all 0.6s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+                transform-origin: center;
+            }
+            .card-wrapper {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                transform-style: preserve-3d;
+            }
+            .card-face {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                backface-visibility: hidden;
+                border-radius: 1.5rem;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                background: white;
+                padding: 2rem;
+                display: flex;
+                flex-direction: column;
+                text-align: center;
+                box-sizing: border-box;
+                transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .card-1 { transform: rotateY(180deg); }
+            .card-2 { transform: rotateY(0deg); }
+            .card-3 { transform: rotateY(180deg); }
+            
+            .fullscreen { 
+                position: fixed; 
+                z-index: 50; 
+                margin: 0;
+                border-radius: 0;
+            }
+            .fullscreen .card-face { 
+                border-radius: 0; 
+                box-shadow: none; 
+                padding: 3rem 2rem;
+            }
+            
+            .zoom-btn {
+                position: absolute;
+                top: 1.5rem;
+                right: 1.5rem;
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.8);
+                backdrop-filter: blur(4px);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                z-index: 10;
+                transition: all 0.3s ease;
+            }
+            .zoom-btn:hover { transform: scale(1.1); }
+            #navbar {
+                position: fixed;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+                z-index: 40;
+                transition: all 0.6s cubic-bezier(0.25, 0.1, 0.25, 1.0);
+                padding: 1.5rem 1rem;
+            }
+            .navbar-hidden {
+                opacity: 0;
+                transform: translateY(-20px);
+                pointer-events: none;
+            }
+            #menu-popup {
+                display: none;
+                position: absolute;
+                background: white;
+                border-radius: 0.5rem;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 50;
+                min-width: 200px;
+            }
+            #menu-popup.visible {
+                display: block;
+                animation: fadeIn 0.3s ease forwards;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .menu-item {
+                padding: 0.75rem 1rem;
+                cursor: pointer;
+            }
+            .menu-item:hover { background-color: rgba(0, 122, 255, 0.05); }
+            
+            .list-card-header { 
+                margin-bottom: 1rem;
+                padding-top: 2.5rem;
+            }
+            .card-2 .list-card-header {
+                padding-top: 7rem;
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .list-card-title {
+                font-size: clamp(2rem, 6vw, 3rem);
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+                line-height: 1.2;
+            }
+            .list-card-subtitle {
+                font-size: clamp(0.9rem, 2vw, 1rem);
+                color: #666;
+                margin-bottom: 0.5rem;
+            }
+            
+            .word-pronunciation {
+                color: #007AFF;
+                font-style: italic;
+                margin-bottom: 1rem;
+            }
+            .word-definition {
+                font-size: 1rem;
+                color: #333;
+                max-width: 400px;
+                margin: 0 auto;
+                line-height: 1.5;
+            }
+            
+            .list-search-container {
+                margin-bottom: 1.5rem;
+                width: 100%;
+                max-width: 400px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .search-input {
+                width: 100%;
+                padding: 0.75rem 1rem;
+                border-radius: 1.5rem;
+                font-size: 0.9rem;
+                border: 1px solid;
+                border-top-color: #eaeaea;
+                border-left-color: #eaeaea;
+                border-bottom-color: #d0d0d0;
+                border-right-color: #d0d0d0;
+                box-shadow: 
+                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
+                    0 1px 0 rgba(255, 255, 255, 0.6);
+                background-color: #f9f9f9;
+                transition: all 0.2s ease;
+            }
+            .search-input:focus {
+                outline: none;
+                box-shadow: 
+                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
+                    0 0 0 2px rgba(0, 122, 255, 0.2);
+            }
+            
+            .list-container {
+                flex-grow: 1;
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto 1rem;
+                overflow-y: auto;
+                border-radius: 1.5rem;
+                padding: 1rem;
+                box-sizing: border-box;
+                border: 1px solid;
+                border-top-color: #eaeaea;
+                border-left-color: #eaeaea;
+                border-bottom-color: #d0d0d0;
+                border-right-color: #d0d0d0;
+                box-shadow: 
+                    inset 0 1px 3px rgba(255, 255, 255, 0.8),
+                    0 1px 0 rgba(255, 255, 255, 0.6);
+                background-color: #f9f9f9;
+            }
+            
+            .list-container::-webkit-scrollbar {
+                width: 8px;
+            }
+            .list-container::-webkit-scrollbar-track {
+                background: #f9f9f9;
+                border-radius: 1.5rem;
+                box-shadow: inset 0 0 2px rgba(0,0,0,0.05);
+            }
+            .list-container::-webkit-scrollbar-thumb {
+                background-color: #e0e0e0;
+                border-radius: 1.5rem;
+                border: 2px solid #f9f9f9;
+                box-shadow: 
+                    0 1px 1px rgba(255,255,255,0.8) inset,
+                    0 1px 3px rgba(0,0,0,0.1);
+            }
+            .list-container::-webkit-scrollbar-thumb:hover {
+                background-color: #d0d0d0;
+            }
+            
+            .list-item {
+                padding: 1rem 1.25rem;
+                margin-bottom: 0.75rem;
+                border-radius: 1rem;
+                background-color: white;
+                text-align: left;
+                transition: all 0.2s ease;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                list-style-type: none !important;
+                position: relative;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .list-item:last-child {
+                margin-bottom: 0;
+            }
+            .list-item:hover {
+                background-color: #f7f9ff;
+                transform: translateX(4px);
+                box-shadow: 0 2px 6px rgba(0, 122, 255, 0.1);
+            }
+            .list-item .word-text {
+                flex-grow: 1;
+                text-align: left;
+            }
+            .list-item .word-actions {
+                display: flex;
+                gap: 0.5rem;
+            }
+            .list-item .action-icon {
+                cursor: pointer;
+                color: #999;
+                transition: color 0.2s ease;
+            }
+            .list-item .action-icon:hover {
+                color: #007AFF;
+            }
+            .list-item .action-icon.collected {
+                color: #007AFF;
+            }
+            
+            .list-button-container {
+                display: flex;
+                gap: 1rem;
+                width: 100%;
+                max-width: 400px;
+                margin: 0 auto;
+                padding-top: 0.5rem;
+                margin-top: auto;
+            }
+            
+            .control-buttons {
+                display: flex;
+                flex-direction: column;
+                gap: 0.7rem;
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+                padding: 1rem;
+                background: transparent;
+                margin-top: auto;
+                padding-bottom: 1.5rem;
+            }
+            .btn-primary i {
+                color: #007AFF;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-white text-gray-900 min-h-screen">
+    <header id="navbar">
+        <div class="container mx-auto flex justify-between items-center relative">
+            <a href="#" class="text-xl font-bold ml-3" id="navbar-logo">Words</a>
+            <nav class="hidden md:block">
+                <a href="#" class="text-sm uppercase tracking-widest hover:text-accent transition-colors">About</a>
+            </nav>
+            <button id="menu-toggle" class="md:hidden text-xl p-2 mr-1" id="navbar-menu">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            
+            <div id="menu-popup" class="py-2">
+                <div class="menu-item flex items-center justify-between" data-action="show-all">
+                    <span class="text-sm uppercase tracking-wider">ALL LIST</span>
+                    <i class="fa-solid fa-list text-accent"></i>
+                </div>
+                <div class="menu-item flex items-center justify-between" data-action="show-collected">
+                    <span class="text-sm uppercase tracking-wider">COLLECTED</span>
+                    <i class="fa-solid fa-star text-accent"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-20 pb-8 flex items-center justify-center min-h-screen">
+        <div class="card-container" id="card-container">
+            <div class="card-wrapper" id="card-wrapper">
+                <!-- 卡片1：ALL LIST -->
+                <div class="card-face card-1" data-card="1">
+                    <div class="zoom-btn" data-zoom><i class="fa-solid fa-expand text-accent"></i></div>
+                    
+                    <div class="list-card-header">
+                        <h2 class="list-card-title">ALL LIST</h2>
+                        <p class="list-card-subtitle">Search in all items</p>
+                    </div>
+                    
+                    <div class="list-search-container">
+                        <input type="text" class="search-input" placeholder="Type to search...">
+                    </div>
+                    
+                    <div class="list-container" id="all-words-list">
+                        <!-- 单词列表将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <div class="list-button-container">
+                        <button class="action-btn btn-primary" data-action="show-collected">
+                            <i class="fa-solid fa-star"></i>
+                            COLLECTED
+                        </button>
+                        <button class="action-btn btn-secondary" data-action="show-main">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            返回
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 卡片2：主屏幕（单词展示与播放） -->
+                <div class="card-face card-2" data-card="2">
+                    <div class="zoom-btn" data-zoom><i class="fa-solid fa-expand text-accent"></i></div>
+                    
+                    <!-- 单词展示区域 -->
+                    <div class="list-card-header">
+                        <h2 class="list-card-title" id="current-word">the</h2>
+                        <div class="word-pronunciation" id="word-pronunciation">/ðə/, /ðiː/</div>
+                        <p class="list-card-subtitle" id="word-definition">定冠词，用于特指人或事物</p>
+                    </div>
+                    
+                    <!-- 控制按钮组 -->
+                    <div class="control-buttons">
+                        <button class="action-btn" data-action="previous" id="previous-btn">
+                            <i class="fa-solid fa-step-backward"></i>
+                            Previous
+                        </button>
+                        <button class="action-btn" data-action="play">
+                            <i class="fa-solid fa-play" id="play-icon"></i>
+                            <span id="play-text">Play</span>
+                        </button>
+                        <button class="action-btn" data-action="next" id="next-btn">
+                            <i class="fa-solid fa-step-forward"></i>
+                            Next
+                        </button>
+                        <button class="action-btn" data-action="collect">
+                            <i class="fa-solid fa-star" id="collect-icon"></i>
+                            Collected
+                        </button>
+                        <button class="action-btn" data-action="auto-play">
+                            <i class="fa-solid fa-repeat"></i>
+                            Auto Play
+                        </button>
+                        <button class="action-btn" data-action="slow">
+                            <i class="fa-solid fa-clock"></i>
+                            Slow
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 卡片3：COLLECTED LIST -->
+                <div class="card-face card-3" data-card="3">
+                    <div class="zoom-btn" data-zoom><i class="fa-solid fa-expand text-accent"></i></div>
+                    
+                    <div class="list-card-header">
+                        <h2 class="list-card-title">COLLECTED</h2>
+                        <p class="list-card-subtitle">Search in your collections</p>
+                    </div>
+                    
+                    <div class="list-search-container">
+                        <input type="text" class="search-input" placeholder="Type to search...">
+                    </div>
+                    
+                    <div class="list-container" id="collected-words-list">
+                        <!-- 收藏单词列表将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <div class="list-button-container">
+                        <button class="action-btn btn-primary" data-action="show-all">
+                            <i class="fa-solid fa-list"></i>
+                            ALL LIST
+                        </button>
+                        <button class="action-btn btn-secondary" data-action="show-main">
+                            <i class="fa-solid fa-arrow-left"></i>
+                            返回
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 单词数据库
+            const wordsData = [
+                "the,/ðə/,/ðiː/,定冠词，用于特指人或事物",
+                "be,/biː/,动词，是；存在",
+                "to,/tuː/,介词，到；向；朝着",
+                "of,/ɒv/,/əv/,介词，属于；关于",
+                "and,/ænd/,连词，和；与；并且",
+                "a,/ə/,/eɪ/,不定冠词，一(个)",
+                "in,/ɪn/,介词，在…里；在…内",
+                "that,/ðæt/,代词，那；那个",
+                "have,/hæv/,动词，有；拥有",
+                "I,/aɪ/,代词，我",
+                "it,/ɪt/,代词，它",
+                "for,/fɔː/,介词，为了；给",
+                "not,/nɒt/,副词，不；没有",
+                "on,/ɒn/,介词，在…上；关于",
+                "with,/wɪð/,介词，和…一起；带有",
+                "he,/hiː/,代词，他",
+                "as,/æz/,介词，作为；像",
+                "you,/juː/,代词，你；你们",
+                "do,/duː/,动词，做；干；助动词",
+                "at,/æt/,介词，在(表示存在或出现的地点、场所、位置、空间)"
+            ];
+            
+            // 解析单词数据
+            const words = wordsData.map(wordStr => {
+                const parts = wordStr.split(',');
+                return {
+                    word: parts[0],
+                    phonetic: parts[1] + (parts[2] ? ',' + parts[2] : ''),
+                    definition: parts.slice(2).join(',').replace(/^,/, ''),
+                    collected: false
+                };
+            });
+            
+            // 本地存储相关
+            function loadCollectedState() {
+                const collectedWords = JSON.parse(localStorage.getItem('collectedWords') || '[]');
+                words.forEach(word => {
+                    word.collected = collectedWords.includes(word.word);
+                });
+            }
+            
+            function saveCollectedState() {
+                const collectedWords = words.filter(word => word.collected).map(word => word.word);
+                localStorage.setItem('collectedWords', JSON.stringify(collectedWords));
+            }
+            
+            // 状态变量
+            let currentWordIndex = 0;
+            let isAutoPlaying = false;       // 自动播放开关
+            let isPlayActive = false;        // Play按钮激活状态
+            let isSpecialActivated = false;  // 是否为特殊激活（由prev/next触发）
+            let autoPlayTimeout = null;      // 自动播放超时器
+            let isSlow = false;              // 是否慢速播放
+            let audio = null;
+            let lastNextClick = 0;           // 记录上次点击next的时间
+            const CLICK_THROTTLE = 300;      // 点击节流时间（毫秒）
+            const WORD_INTERVAL = 1800;      // 单词间间隔时间（毫秒）
+            const SLOW_SPEED = 0.6;          // 慢速播放倍数
+            const NORMAL_SPEED = 1.0;        // 正常播放倍数
+            
+            // DOM元素
+            const currentWordEl = document.getElementById('current-word');
+            const wordPronunciationEl = document.getElementById('word-pronunciation');
+            const wordDefinitionEl = document.getElementById('word-definition');
+            const collectIconEl = document.getElementById('collect-icon');
+            const allWordsListEl = document.getElementById('all-words-list');
+            const collectedWordsListEl = document.getElementById('collected-words-list');
+            const playButton = document.querySelector('[data-action="play"]');
+            const playIcon = document.getElementById('play-icon');
+            const playText = document.getElementById('play-text');
+            const autoPlayButton = document.querySelector('[data-action="auto-play"]');
+            const previousBtn = document.getElementById('previous-btn');
+            const nextBtn = document.getElementById('next-btn');
+            
+            // 初始化
+            loadCollectedState();
+            renderWordLists();
+            updateCurrentWordDisplay();
+            updateCollectButtonState();
+            
+            // 渲染单词列表
+            function renderWordLists() {
+                allWordsListEl.innerHTML = '';
+                words.forEach((word, index) => {
+                    allWordsListEl.appendChild(createWordListItem(word, index));
+                });
+                renderCollectedWordsList();
+            }
+            
+            // 渲染收藏单词列表
+            function renderCollectedWordsList() {
+                collectedWordsListEl.innerHTML = '';
+                const collectedWords = words.filter(word => word.collected);
+                
+                if (collectedWords.length === 0) {
+                    const emptyItem = document.createElement('div');
+                    emptyItem.className = 'list-item';
+                    emptyItem.textContent = 'No collected words yet';
+                    collectedWordsListEl.appendChild(emptyItem);
+                } else {
+                    collectedWords.forEach(word => {
+                        const index = words.indexOf(word);
+                        collectedWordsListEl.appendChild(createWordListItem(word, index));
+                    });
+                }
+            }
+            
+            // 创建单词列表项
+            function createWordListItem(word, index) {
+                const listItem = document.createElement('div');
+                listItem.className = 'list-item';
+                listItem.innerHTML = `
+                    <div class="word-text">
+                        <div class="word">${word.word}</div>
+                        <div class="word-short-def">${word.definition.substring(0, 30)}${word.definition.length > 30 ? '...' : ''}</div>
+                    </div>
+                    <div class="word-actions">
+                        <i class="fa-solid fa-volume-up action-icon play-word" data-index="${index}"></i>
+                        <i class="fa-solid fa-star action-icon collect-word ${word.collected ? 'collected' : ''}" data-index="${index}"></i>
+                    </div>
+                `;
+                
+                listItem.addEventListener('click', (e) => {
+                    if (!e.target.closest('.action-icon')) {
+                        showWord(index);
+                        showCard(2);
+                    }
+                });
+                
+                listItem.querySelector('.play-word').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    playWordPronunciation(words[index].word, false);
+                });
+                
+                listItem.querySelector('.collect-word').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleCollectWord(index);
+                });
+                
+                return listItem;
+            }
+            
+            // 更新当前单词显示
+            function updateCurrentWordDisplay() {
+                const currentWord = words[currentWordIndex];
+                currentWordEl.textContent = currentWord.word;
+                wordPronunciationEl.textContent = currentWord.phonetic;
+                wordDefinitionEl.textContent = currentWord.definition;
+                updateCollectButtonState();
+            }
+            
+            // 更新收藏按钮状态
+            function updateCollectButtonState() {
+                const currentWord = words[currentWordIndex];
+                const collectButton = document.querySelector('[data-action="collect"]');
+                
+                if (currentWord.collected) {
+                    collectIconEl.classList.add('collected');
+                    collectButton.classList.add('active');
+                } else {
+                    collectIconEl.classList.remove('collected');
+                    collectButton.classList.remove('active');
+                }
+            }
+            
+            // 播放单词发音
+            function playWordPronunciation(word, isSpecial = false) {
+                // 清除任何现有的自动播放超时
+                if (autoPlayTimeout) {
+                    clearTimeout(autoPlayTimeout);
+                    autoPlayTimeout = null;
+                }
+                
+                // 停止当前播放
+                if (audio) {
+                    audio.pause();
+                    audio = null;
+                }
+                
+                // 创建新的音频对象
+                audio = new Audio();
+                audio.src = `http://dict.youdao.com/dictvoice?audio=${encodeURIComponent(word)}&type=2`;
+                
+                // 设置播放速度
+                audio.playbackRate = isSlow ? SLOW_SPEED : NORMAL_SPEED;
+                
+                // 更新激活状态 - 自动播放模式下忽略特殊激活
+                isSpecialActivated = isAutoPlaying ? false : isSpecial;
+                isPlayActive = true;
+                updatePlayButtonState();
+                
+                // 播放音频
+                audio.play().catch(error => {
+                    console.error('播放失败:', error);
+                    resetPlayState();
+                });
+                
+                // 音频结束处理
+                audio.onended = () => {
+                    // 如果是自动播放状态且Play激活，继续播放下一个
+                    if (isAutoPlaying && isPlayActive) {
+                        // 设置单词间1.8秒的间隔
+                        autoPlayTimeout = setTimeout(() => {
+                            showNextWord(false);
+                        }, WORD_INTERVAL);
+                    } else {
+                        // 非自动播放状态，或自动播放已关闭，重置Play状态
+                        resetPlayState();
+                    }
+                };
+            }
+            
+            // 更新播放按钮状态
+            function updatePlayButtonState() {
+                if (isPlayActive) {
+                    playIcon.classList.remove('fa-play');
+                    playIcon.classList.add('fa-pause');
+                    playText.textContent = 'Pause';
+                    
+                    // 自动播放时强制保持激活状态
+                    if (isAutoPlaying) {
+                        playButton.classList.add('active');
+                        playButton.classList.remove('special-active');
+                    } else if (isSpecialActivated) {
+                        playButton.classList.remove('active');
+                        playButton.classList.add('special-active');
+                    } else {
+                        playButton.classList.add('active');
+                        playButton.classList.remove('special-active');
+                    }
+                } else {
+                    playIcon.classList.remove('fa-pause');
+                    playIcon.classList.add('fa-play');
+                    playText.textContent = 'Play';
+                    playButton.classList.remove('active', 'special-active');
+                }
+            }
+            
+            // 重置播放状态
+            function resetPlayState() {
+                // 无论何种状态，都重置Play状态
+                isPlayActive = false;
+                isSpecialActivated = false;
+                updatePlayButtonState();
+            }
+            
+            // 显示指定单词
+            function showWord(index) {
+                if (index >= 0 && index < words.length) {
+                    currentWordIndex = index;
+                    updateCurrentWordDisplay();
+                }
+            }
+            
+            // 为按钮添加激活效果
+            function activateButton(btn, duration = 300) {
+                btn.classList.add('active');
+                // 一段时间后自动移除激活状态
+                setTimeout(() => {
+                    btn.classList.remove('active');
+                }, duration);
+            }
+            
+            // 上一个单词
+            function showPreviousWord(activateBtn = true) {
+                // 清除任何现有的自动播放超时
+                if (autoPlayTimeout) {
+                    clearTimeout(autoPlayTimeout);
+                    autoPlayTimeout = null;
+                }
+                
+                // 停止当前播放
+                if (audio) {
+                    audio.pause();
+                    audio = null;
+                }
+                
+                // 如果需要激活按钮（手动点击时）
+                if (activateBtn) {
+                    activateButton(previousBtn);
+                }
+                
+                currentWordIndex = (currentWordIndex - 1 + words.length) % words.length;
+                updateCurrentWordDisplay();
+                
+                // 播放新单词 - 自动播放模式下不使用特殊激活
+                playWordPronunciation(words[currentWordIndex].word, !isAutoPlaying);
+            }
+            
+            // 下一个单词（添加节流控制）
+            function showNextWord(activateBtn = true) {
+                const now = Date.now();
+                // 节流控制，防止短时间内多次点击
+                if (now - lastNextClick < CLICK_THROTTLE) {
+                    return;
+                }
+                lastNextClick = now;
+                
+                // 清除任何现有的自动播放超时
+                if (autoPlayTimeout) {
+                    clearTimeout(autoPlayTimeout);
+                    autoPlayTimeout = null;
+                }
+                
+                // 停止当前播放
+                if (audio) {
+                    audio.pause();
+                    audio = null;
+                }
+                
+                // 如果需要激活按钮（手动点击时）
+                if (activateBtn) {
+                    activateButton(nextBtn);
+                }
+                
+                currentWordIndex = (currentWordIndex + 1) % words.length;
+                updateCurrentWordDisplay();
+                
+                // 播放新单词 - 自动播放模式下不使用特殊激活
+                playWordPronunciation(words[currentWordIndex].word, !isAutoPlaying);
+                
+                // 确保自动播放状态保持
+                if (isAutoPlaying) {
+                    isPlayActive = true;
+                    updatePlayButtonState();
+                }
+            }
+            
+            // 切换单词收藏状态
+            function toggleCollectWord(index) {
+                words[index].collected = !words[index].collected;
+                saveCollectedState();
+                renderWordLists();
+                
+                if (index === currentWordIndex) {
+                    updateCollectButtonState();
+                }
+            }
+            
+            // 切换播放/暂停
+            function togglePlay() {
+                if (isPlayActive) {
+                    // 暂停播放
+                    if (audio) {
+                        audio.pause();
+                        audio = null;
+                    }
+                    
+                    // 清除自动播放超时
+                    if (autoPlayTimeout) {
+                        clearTimeout(autoPlayTimeout);
+                        autoPlayTimeout = null;
+                    }
+                    
+                    resetPlayState();
+                } else {
+                    // 开始播放
+                    playWordPronunciation(words[currentWordIndex].word, false);
+                }
+            }
+            
+            // 切换自动播放
+            function toggleAutoPlay() {
+                const wasAutoPlaying = isAutoPlaying;
+                isAutoPlaying = !isAutoPlaying;
+                autoPlayButton.classList.toggle('active', isAutoPlaying);
+                
+                // 清除任何现有的自动播放超时
+                if (autoPlayTimeout) {
+                    clearTimeout(autoPlayTimeout);
+                    autoPlayTimeout = null;
+                }
+                
+                // 如果从开启变为关闭
+                if (wasAutoPlaying && !isAutoPlaying) {
+                    // 检查当前是否有音频在播放
+                    if (audio && !audio.paused) {
+                        // 音频播放结束后自动重置Play状态
+                        const originalOnEnded = audio.onended;
+                        audio.onended = function() {
+                            originalOnEnded();
+                            resetPlayState();
+                        };
+                    } else {
+                        // 没有音频播放，直接重置Play状态
+                        resetPlayState();
+                    }
+                } 
+                // 如果从关闭变为开启
+                else if (!wasAutoPlaying && isAutoPlaying) {
+                    // 如果Play未激活，则激活Play
+                    if (!isPlayActive) {
+                        togglePlay();
+                    } else {
+                        // 更新按钮状态以反映自动播放模式
+                        updatePlayButtonState();
+                    }
+                }
+            }
+            
+            // 切换播放速度（0.6倍速）
+            function toggleSlowSpeed() {
+                isSlow = !isSlow;
+                const slowButton = document.querySelector('[data-action="slow"]');
+                slowButton.classList.toggle('active', isSlow);
+                
+                // 如果当前有音频播放，立即更新播放速度
+                if (audio) {
+                    audio.playbackRate = isSlow ? SLOW_SPEED : NORMAL_SPEED;
+                }
+            }
+            
+            // 菜单和卡片切换逻辑
+            const menuToggle = document.getElementById('menu-toggle');
+            const menuPopup = document.getElementById('menu-popup');
+            const navbar = document.getElementById('navbar');
+            const cardContainer = document.getElementById('card-container');
+            const cards = {
+                1: document.querySelector('.card-1'),
+                2: document.querySelector('.card-2'),
+                3: document.querySelector('.card-3')
+            };
+            const zoomButtons = document.querySelectorAll('[data-zoom]');
+            
+            let currentCard = 2;
+            let isAnimating = false;
+            let isFullscreen = false;
+            let originalState = null;
+
+            function positionMenu() {
+                const rect = menuToggle.getBoundingClientRect();
+                menuPopup.style.top = `${rect.bottom + 8}px`;
+                menuPopup.style.right = '10px';
+            }
+
+            menuToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                menuPopup.classList.toggle('visible');
+                positionMenu();
+                const icon = menuToggle.querySelector('i');
+                icon.classList.toggle('fa-bars');
+                icon.classList.toggle('fa-xmark');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (menuPopup.classList.contains('visible') && 
+                    !menuToggle.contains(e.target) && 
+                    !menuPopup.contains(e.target)) {
+                    menuPopup.classList.remove('visible');
+                    menuToggle.querySelector('i').classList.add('fa-bars');
+                    menuToggle.querySelector('i').classList.remove('fa-xmark');
+                }
+            });
+
+            function showCard(targetCard) {
+                if (isAnimating || targetCard === currentCard) return;
+                isAnimating = true;
+
+                // 切换卡片时停止自动播放和当前播放
+                if (isAutoPlaying) {
+                    toggleAutoPlay();
+                }
+                if (isPlayActive) {
+                    togglePlay();
+                }
+
+                cards[currentCard].style.transform = 'rotateY(180deg)';
+                cards[targetCard].style.transform = 'rotateY(0deg)';
+                
+                setTimeout(() => {
+                    currentCard = targetCard;
+                    isAnimating = false;
+                }, 800);
+            }
+
+            function toggleFullscreen() {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                if (!isFullscreen) {
+                    const rect = cardContainer.getBoundingClientRect();
+                    originalState = {
+                        width: rect.width,
+                        height: rect.height,
+                        top: rect.top + window.scrollY,
+                        left: rect.left + window.scrollX,
+                        position: cardContainer.style.position || '',
+                        margin: cardContainer.style.margin || '',
+                        borderRadius: cardContainer.style.borderRadius || ''
+                    };
+
+                    cardContainer.style.position = 'fixed';
+                    cardContainer.style.top = `${originalState.top}px`;
+                    cardContainer.style.left = `${originalState.left}px`;
+                    cardContainer.style.width = `${originalState.width}px`;
+                    cardContainer.style.height = `${originalState.height}px`;
+                    cardContainer.style.margin = '0';
+                    cardContainer.style.zIndex = '50';
+
+                    void cardContainer.offsetWidth;
+
+                    cardContainer.style.top = '0';
+                    cardContainer.style.left = '0';
+                    cardContainer.style.width = '100vw';
+                    cardContainer.style.height = '100vh';
+                    cardContainer.style.borderRadius = '0';
+                    cardContainer.classList.add('fullscreen');
+
+                    navbar.classList.add('navbar-hidden');
+                    document.body.style.overflow = 'hidden';
+                    isFullscreen = true;
+                } else {
+                    cardContainer.style.top = `${originalState.top}px`;
+                    cardContainer.style.left = `${originalState.left}px`;
+                    cardContainer.style.width = `${originalState.width}px`;
+                    cardContainer.style.height = `${originalState.height}px`;
+                    cardContainer.style.borderRadius = originalState.borderRadius;
+
+                    cardContainer.classList.remove('fullscreen');
+
+                    navbar.classList.remove('navbar-hidden');
+                    document.body.style.overflow = '';
+                    isFullscreen = false;
+
+                    setTimeout(() => {
+                        cardContainer.style.position = originalState.position;
+                        cardContainer.style.top = '';
+                        cardContainer.style.left = '';
+                        cardContainer.style.width = '';
+                        cardContainer.style.height = '';
+                        cardContainer.style.margin = originalState.margin;
+                        cardContainer.style.zIndex = '';
+                    }, 600);
+                }
+
+                zoomButtons.forEach(btn => {
+                    const icon = btn.querySelector('i');
+                    if (isFullscreen) {
+                        icon.classList.replace('fa-expand', 'fa-compress');
+                    } else {
+                        icon.classList.replace('fa-compress', 'fa-expand');
+                    }
+                });
+
+                setTimeout(() => {
+                    isAnimating = false;
+                }, 600);
+            }
+            
+            // 搜索功能
+            const searchInputs = document.querySelectorAll('.search-input');
+            searchInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase();
+                    const isAllList = this.closest('.card-1') !== null;
+                    
+                    if (isAllList) {
+                        allWordsListEl.innerHTML = '';
+                        words.forEach((word, index) => {
+                            if (word.word.toLowerCase().includes(searchTerm) || 
+                                word.definition.toLowerCase().includes(searchTerm)) {
+                                allWordsListEl.appendChild(createWordListItem(word, index));
+                            }
+                        });
+                    } else {
+                        collectedWordsListEl.innerHTML = '';
+                        const collectedWords = words.filter(word => word.collected);
+                        collectedWords.forEach(word => {
+                            if (word.word.toLowerCase().includes(searchTerm) || 
+                                word.definition.toLowerCase().includes(searchTerm)) {
+                                const index = words.indexOf(word);
+                                collectedWordsListEl.appendChild(createWordListItem(word, index));
+                            }
+                        });
+                    }
+                });
+            });
+
+            // 按钮事件监听
+            document.querySelectorAll('[data-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (isAnimating) return;
+                    const action = btn.dataset.action;
+                    switch(action) {
+                        case 'show-all':
+                            renderWordLists();
+                            showCard(1);
+                            break;
+                        case 'show-collected':
+                            renderCollectedWordsList();
+                            showCard(3);
+                            break;
+                        case 'show-main':
+                            showCard(2);
+                            break;
+                        case 'previous':
+                            // 手动点击时激活按钮
+                            showPreviousWord(true);
+                            break;
+                        case 'play':
+                            togglePlay();
+                            break;
+                        case 'next':
+                            // 手动点击时激活按钮
+                            showNextWord(true);
+                            break;
+                        case 'collect':
+                            toggleCollectWord(currentWordIndex);
+                            break;
+                        case 'auto-play':
+                            toggleAutoPlay();
+                            break;
+                        case 'slow':
+                            toggleSlowSpeed();
+                            break;
+                    }
+                });
+            });
+
+            // 缩放按钮事件
+            zoomButtons.forEach(btn => {
+                btn.addEventListener('click', toggleFullscreen);
+            });
+
+            // 键盘事件
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && isFullscreen) {
+                    toggleFullscreen();
+                }
+                
+                if (currentCard === 2) {
+                    switch(e.key) {
+                        case ' ': // 空格键播放/暂停
+                            e.preventDefault();
+                            togglePlay();
+                            break;
+                        case 'ArrowLeft': // 左箭头前一个
+                            showPreviousWord(true);
+                            break;
+                        case 'ArrowRight': // 右箭头后一个
+                            showNextWord(true);
+                            break;
+                        case 'c': // C键收藏
+                            toggleCollectWord(currentWordIndex);
+                            break;
+                        case 'a': // A键自动播放
+                            toggleAutoPlay();
+                            break;
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
