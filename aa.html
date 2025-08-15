@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>视频播放</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000;
+        }
+        
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        #startOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            cursor: pointer;
+        }
+        
+        #startText {
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 首次启动覆盖层 - 用于满足浏览器交互要求 -->
+    <div id="startOverlay">
+        <div id="startText">点击开始播放<br></div>
+    </div>
+    
+    <!-- 视频播放器 -->
+    <video id="videoPlayer" autoplay playsinline loop></video>
+
+    <script>
+        // 在这里替换为您的视频链接
+        const VIDEO_URL = "https://px21.genyoutube.online/mates/en/download?url=ZTREjvNyOeS6Ea8mdYl5E33/NMO%2BeC%2BOM6WdwcYQQimc02eQvWpKgXVJYQbn0GUi/WDcHamIoI%2B%2BR6jL2R/rkR0NoArfV5lfpplORIDYifCy/TLIplLn230k4UJe9A3dZpm8sFP2a2ZCYGZEc4DDfgbVSX7qj%2B1bd8pv9r3jY3/ob5jwFoIz%2Bp8%2BhBEpH101HSZ2JbxoPVH7WYaetjQXBZ2BccvtTt2NN7EayNWlaMWWJStIYU7OI7B4vZywqxeKKJk9XHjWoYm%2B4BdA9d9SKVywWsWn/CkaMc5dZcxjScF4xvgL8uWUyXEJthuerB0LVGPgPvoBmVSa/glxZKjeQ58%2BhBEpH101QxnnaSz5N0eAUj1fAD2Ko8RP8AQyRvJEZxfwCF4pmKakqi9NzkTof3K5EMbav4/fRXrnuYXYtmpb8LRkCaW1EZopXo22wGXNqfyWUAeYm0Jylr85AJCDr6tvLKjNEl6FSn67tbVqyf/o6NAnxDjDOgPp1YCHI1MRV3F%2BfIZTmsGnYr69OWOnuT16Tp/TTMfGP6b7LcPZL%2BZAAHgNkLLe6Lstro7iW%2BZMHhd62ETXld58xu7cGIMDTp8%2BhBEpH101v7CUVsxOZd47np5E/sW/vqszNyAz0YyWTZB9Oie542mQj4fgUv3pyo70nsLH7DKN5560LtyPYzSrx82mBVCKYT8s3lwi8HmQLt%2BSrKAq5XKxKD%2B15JJh4zxcsUVzfHhgFn3YkUwDRbGYjv1kuTahcQT6greZtjXi";
+        
+        // 获取元素
+        const videoPlayer = document.getElementById('videoPlayer');
+        const startOverlay = document.getElementById('startOverlay');
+        
+        // 配置视频
+        videoPlayer.src = VIDEO_URL;
+        videoPlayer.volume = 1; // 确保音量最大
+        videoPlayer.muted = false; // 不静音
+        
+        // 首次点击处理 - 满足浏览器交互要求
+        startOverlay.addEventListener('click', () => {
+            // 移除覆盖层
+            startOverlay.style.display = 'none';
+            
+            // 播放视频并确保声音开启
+            videoPlayer.play()
+                .then(() => {
+                    console.log('视频已开始播放，声音已开启');
+                    videoPlayer.muted = false;
+                    videoPlayer.volume = 1;
+                })
+                .catch(error => {
+                    console.log('播放尝试失败，使用备用方案:', error);
+                    // 备用方案：先静音播放再开启声音
+                    videoPlayer.muted = true;
+                    videoPlayer.play().then(() => {
+                        setTimeout(() => {
+                            videoPlayer.muted = false;
+                        }, 500);
+                    });
+                });
+        });
+        
+        // 视频播放事件 - 确保声音始终开启
+        videoPlayer.addEventListener('play', () => {
+            videoPlayer.muted = false;
+            videoPlayer.volume = 1;
+        });
+        
+        // 视频结束时自动重播
+        videoPlayer.addEventListener('ended', () => {
+            videoPlayer.play();
+        });
+        
+        // 防止音量被意外调整
+        videoPlayer.addEventListener('volumechange', () => {
+            if (videoPlayer.muted) {
+                videoPlayer.muted = false;
+            }
+            if (videoPlayer.volume < 1) {
+                videoPlayer.volume = 1;
+            }
+        });
+    </script>
+</body>
+</html>
